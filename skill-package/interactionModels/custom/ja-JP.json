@@ -31,10 +31,44 @@
         {
           "name": "AMAZON.NavigateHomeIntent",
           "samples": []
+        },
+        {
+          "name": "AskKSPBusIntent",
+          "slots": [
+            {
+              "name": "date",
+              "type": "AMAZON.DATE"
+            },
+            {
+              "name": "time",
+              "type": "AMAZON.TIME"
+            }
+          ],
+          "samples": [
+            "{time}",
+            "{date} の {time}"
+          ]
+        },
+        {
+          "name": "AskKspBusTimeIntent",
+          "slots": [
+            {
+              "name": "date",
+              "type": "AMAZON.DATE"
+            },
+            {
+              "name": "time",
+              "type": "AMAZON.TIME"
+            }
+          ],
+          "samples": [
+            "{time}",
+            "{date} の {time} "
+          ]
         }
       ],
       "types": []
     }
   },
-  "version": "1"
+  "version": "9"
 }
