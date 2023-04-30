@@ -6,6 +6,8 @@
 const Alexa = require('ask-sdk-core');
 const dateFns = require('date-fns');
 const dateFnsLocale = require('date-fns/locale');
+const fs = require('fs');
+const csv = require('csv');
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
