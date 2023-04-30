@@ -5,16 +5,66 @@
  * */
 const Alexa = require('ask-sdk-core');
 const dateFns = require('date-fns');
-const dateFnsLocale = require('date-fns/locale');
+const dateFnsLocaleJa = require('date-fns/locale/ja');
 const fs = require('fs');
-const csv = require('csv');
+const csvParseSync = require('csv-parse/sync');
+
+const TimetableType = Object.freeze({
+    Weekday: 'Weekday',
+    Saturday: 'Saturday',
+    Sunday: 'Sunday'
+});
+
+function LoadTimetableSync(timetableType) {
+    const filePath = (timetableType == TimetableType.Sunday) ? "sunday.csv"
+        : (timetableType == TimetableType.Saturday) ? "saturday.csv"
+            : "weekday.csv"
+    return csvParseSync.parse(fs.readFileSync(filePath), {
+        relax_column_count: true
+    }).reduce((acc, [key, ...values]) => ({ ...acc, [parseInt(key)]: values.map(v => parseInt(v, 10)) }), {});
+}
+
+// This returns [the 1st nearest, the 2nd nearest]
+function GetCandidateTime(date) {
+    const timetableType = (date.getDay() == 0) ? TimetableType.Sunday
+        : (date.getDay() == 6) ? TimetableType.Saturday
+            : TimetableType.Weekday;
+    const timetable = LoadTimetableSync(timetableType);
+
+    const getDateFromTime = (hour, minute) => {
+        const dateStr = dateFns.format(date, "yyyy-MM-dd",
+            { locale: dateFnsLocaleJa });
+        return dateFns.parse(`${dateStr} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+            'yyyy-MM-dd HH:mm', new Date(), { locale: dateFnsLocaleJa });
+    }
+
+    const getNearestTime = (targetDate) => {
+        const [hour, minute] = [targetDate.getHours(), targetDate.getMinutes()];
+        const minHourInTimetable = Math.min(Object.keys(timetable));
+        if (hour < minHourInTimetable) {
+            return getDateFromTime(minHourInTimetable, timetable[minHourInTimetable][0]);
+        }
+        const maxHourInTimetable = Math.max(Object.keys(timetable));
+        if (hour > maxHourInTimetable) {
+            return null;
+        }
+        let nextIndex = timetable[hour].findIndex(v => v > minute);
+        return (nextIndex >= 0) ? getDateFromTime(hour, timetable[hour][nextIndex])
+            : (hour != maxHourInTimetable) ? getDateFromTime(hour + 1, timetable[hour + 1][0])
+                : null;
+    }
+
+    const nearest1stTime = getNearestTime(date);
+    const nearest2ndTime = getNearestTime(nearest1stTime);
+    return [nearest1stTime, nearest2ndTime];
+}
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
     handle(handlerInput) {
-        const speakOutput = 'はい，時刻をお知らせください';
+        const speakOutput = 'はい、時刻をお知らせください';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -30,17 +80,26 @@ const AskKSPBusIntentHandler = {
     },
     handle(handlerInput) {
         const date = handlerInput.requestEnvelope.request.intent.slots.date.value
-            || dateFns.format(new Date(), "yyyy-MM-dd", { locale: dateFnsLocale.ja });
+            || dateFns.format(new Date(), "yyyy-MM-dd", { locale: dateFnsLocaleJa });
         const time = handlerInput.requestEnvelope.request.intent.slots.time.value
-            || dateFns.format(new Date(), "HH:mm", { locale: dateFnsLocale.ja });
+            || dateFns.format(new Date(), "HH:mm", { locale: dateFnsLocaleJa });
+        const inputDate = dateFns.parse(`${date} ${time}`, 'yyyy-MM-dd HH:mm',
+            new Date(), { locale: dateFnsLocaleJa });
+        const candidates = GetCandidateTime(inputDate);
 
-        const target = dateFns.parse(`${date} ${time}`, 'yyyy-MM-dd HH:mm',
-            new Date(), { locale: dateFnsLocale.ja });
+        const dateToTimeJaStr = (d) => {
+            const h = dateFns.format(d, "HH", { locale: dateFnsLocaleJa });
+            const m = dateFns.format(d, "mm", { locale: dateFnsLocaleJa });
+            return `${h}時${m}分`
+        }
 
-        const speakOutput = `${target}になります`;
+        const speakOutput =
+            (candidates[0] === null) ? `今日の便はもうありません`
+                : (candidates[1] === null) ? `次の便は${dateToTimeJaStr(candidates[0])}で、その次はもうありません`
+                    : `次の便は${dateToTimeJaStr(candidates[0])}で、その次は${dateToTimeJaStr(candidates[1])}です。`;
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            .reprompt(`最も近いバスはまるまるで，その次はペケペケです．`)
+            .reprompt(speakOutput)
             .getResponse();
     }
 };
@@ -51,7 +110,7 @@ const HelpIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-        const speakOutput = '時刻をお知らせいただいたら，それに近いKSPバスの時間をお伝えします';
+        const speakOutput = '時刻をお知らせいただいたら、それに近いKSPバスの時間をお伝えします';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -85,7 +144,7 @@ const FallbackIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.FallbackIntent';
     },
     handle(handlerInput) {
-        const speakOutput = 'すみません，理解できませんでした';
+        const speakOutput = 'すみません、理解できませんでした';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)

@@ -13,6 +13,7 @@
     "ask-sdk-model": "^1.19.0",
     "aws-sdk": "^2.326.0",
     "csv": "^6.2.10",
+    "csv-parser": "^3.0.0",
     "date-fns": "^2.30.0"
   },
   "devDependencies": {
