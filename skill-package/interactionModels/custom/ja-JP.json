@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "バスの時刻表",
+      "invocationName": "バスの時間",
       "intents": [
         {
           "name": "AMAZON.CancelIntent",
@@ -60,5 +60,5 @@
       "types": []
     }
   },
-  "version": "26"
+  "version": "31"
 }
