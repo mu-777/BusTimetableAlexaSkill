@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "バスの時間",
+      "invocationName": "バスの時刻表",
       "intents": [
         {
           "name": "AMAZON.CancelIntent",
@@ -20,25 +20,45 @@
           "samples": []
         },
         {
-          "name": "AskKSPBusIntent",
+          "name": "AskKSPBusWithTimeIntent",
           "slots": [
+            {
+              "name": "time",
+              "type": "AMAZON.TIME"
+            },
             {
               "name": "date",
               "type": "AMAZON.DATE"
             },
             {
-              "name": "time",
-              "type": "AMAZON.TIME"
+              "name": "dayofweek",
+              "type": "AMAZON.DayOfWeek"
             }
           ],
           "samples": [
+            "{dayofweek} の {time} ",
             "{time}",
             "{date} の {time}"
+          ]
+        },
+        {
+          "name": "AskNextKSPBusIntent",
+          "slots": [],
+          "samples": [
+            "今は",
+            "今",
+            "次のは",
+            "近いのは",
+            "近い便は",
+            "次の時間は",
+            "次",
+            "次は",
+            "次の便は"
           ]
         }
       ],
       "types": []
     }
   },
-  "version": "17"
+  "version": "26"
 }

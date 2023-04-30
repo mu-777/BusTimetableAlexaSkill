@@ -8,6 +8,7 @@ const dateFns = require('date-fns');
 const dateFnsLocaleJa = require('date-fns/locale/ja');
 const fs = require('fs');
 const csvParseSync = require('csv-parse/sync');
+const { getJstNow, dateToTimeJaStr, getDateFromDayOfWeek, dayOfWeekStrToNum } = require('./util')
 
 const TimetableType = Object.freeze({
     Weekday: 'Weekday',
@@ -59,6 +60,12 @@ function GetCandidateTime(date) {
     return [nearest1stTime, nearest2ndTime];
 }
 
+function getKSPBusAnswer(candidates) {
+    return (candidates[0] === null) ? `今日の便はもうありません。`
+        : (candidates[1] === null) ? `次の便は${dateToTimeJaStr(candidates[0])}で、その次はもうありません。`
+            : `次の便は${dateToTimeJaStr(candidates[0])}で、その次は${dateToTimeJaStr(candidates[1])}です。`;
+}
+
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
@@ -73,30 +80,45 @@ const LaunchRequestHandler = {
     }
 };
 
+const AskNextKSPBusIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskNextKSPBusIntent';
+    },
+    handle(handlerInput) {
+        const candidates = GetCandidateTime(getJstNow());
+        const speakOutput = getKSPBusAnswer(candidates);
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+    }
+
+}
+
 const AskKSPBusIntentHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskKSPBusIntent';
     },
     handle(handlerInput) {
-        const date = handlerInput.requestEnvelope.request.intent.slots.date.value
-            || dateFns.format(new Date(), "yyyy-MM-dd", { locale: dateFnsLocaleJa });
-        const time = handlerInput.requestEnvelope.request.intent.slots.time.value
-            || dateFns.format(new Date(), "HH:mm", { locale: dateFnsLocaleJa });
+        const time = handlerInput.requestEnvelope.request.intent.slots.time.value;
+        if (!time) {
+            const speakOutput = "認識に失敗しました。再度、時刻をお知らせください。"
+            return handlerInput.responseBuilder
+                .speak(speakOutput)
+                .reprompt(speakOutput)
+                .getResponse();
+        }
+        const dayofweek = handlerInput.requestEnvelope.request.intent.slots.dayofweek.value;
+        const date = dayofweek ? getDateFromDayOfWeek(dayOfWeekStrToNum(dayofweek))
+            : handlerInput.requestEnvelope.request.intent.slots.date.value || dateFns.format(getJstNow(), "yyyy-MM-dd", { locale: dateFnsLocaleJa });
+
         const inputDate = dateFns.parse(`${date} ${time}`, 'yyyy-MM-dd HH:mm',
             new Date(), { locale: dateFnsLocaleJa });
+
         const candidates = GetCandidateTime(inputDate);
-
-        const dateToTimeJaStr = (d) => {
-            const h = dateFns.format(d, "HH", { locale: dateFnsLocaleJa });
-            const m = dateFns.format(d, "mm", { locale: dateFnsLocaleJa });
-            return `${h}時${m}分`
-        }
-
-        const speakOutput =
-            (candidates[0] === null) ? `今日の便はもうありません`
-                : (candidates[1] === null) ? `次の便は${dateToTimeJaStr(candidates[0])}で、その次はもうありません`
-                    : `次の便は${dateToTimeJaStr(candidates[0])}で、その次は${dateToTimeJaStr(candidates[1])}です。`;
+        const speakOutput = getKSPBusAnswer(candidates);
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
@@ -214,6 +236,7 @@ const ErrorHandler = {
 exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
         LaunchRequestHandler,
+        AskNextKSPBusIntentHandler,
         AskKSPBusIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
