@@ -3,7 +3,13 @@
  * Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
  * session persistence, api calls, and more.
  * */
-const Alexa = require('ask-sdk-core');
+const {
+    Alexa, 
+    getRequestType,
+    getIntentName,
+    getSlotValue,
+    getDialogState,
+  } = require('ask-sdk-core');
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -25,10 +31,8 @@ const AskKSPBusIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskKSPBusIntent';
     },
     handle(handlerInput) {
-        const attributesManager = handlerInput.attributesManager;
-        const sessionAttributes = attributesManager.getSessionAttributes() || {};
-        const date = sessionAttributes.hasOwnProperty('date') ? sessionAttributes.date : 0;
-        const time = sessionAttributes.hasOwnProperty('time') ? sessionAttributes.time : 0;
+        const date = getSlotValue(handlerInput.requestEnvelope, 'date');
+        const time = getSlotValue(handlerInput.requestEnvelope, 'time');
 
         const speakOutput = `日付は${date}で，時刻は${time}です`;
 
