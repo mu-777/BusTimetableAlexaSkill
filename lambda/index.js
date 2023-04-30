@@ -21,17 +21,8 @@ const LaunchRequestHandler = {
 
 const AskKSPBusIntentHandler = {
     canHandle(handlerInput) {
-        if (Alexa.getRequestType(handlerInput.requestEnvelope) !== 'IntentRequest') {
-            return false;
-        }
-        if (Alexa.getIntentName(handlerInput.requestEnvelope) !== 'AskKSPBusIntent') {
-            return false;
-        }
-
-        const attributesManager = handlerInput.attributesManager;
-        const sessionAttributes = attributesManager.getSessionAttributes() || {};
-        const time = sessionAttributes.hasOwnProperty('time') ? sessionAttributes.time : 0;
-        return time;
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskKSPBusIntent';
     },
     handle(handlerInput) {
         const attributesManager = handlerInput.attributesManager;
