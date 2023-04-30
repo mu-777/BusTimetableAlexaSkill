@@ -31,8 +31,11 @@ const AskKSPBusIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskKSPBusIntent';
     },
     handle(handlerInput) {
-        const date = getSlotValue(handlerInput.requestEnvelope, 'date');
-        const time = getSlotValue(handlerInput.requestEnvelope, 'time');
+        // const date = getSlotValue(handlerInput.requestEnvelope, 'date');
+        // const time = getSlotValue(handlerInput.requestEnvelope, 'time');
+
+        const date = handlerInput.requestEnvelope.request.intent.slots.date.value;
+        const time = handlerInput.requestEnvelope.request.intent.slots.time.value;
 
         const speakOutput = `日付は${date}で，時刻は${time}です`;
 
