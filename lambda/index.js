@@ -10,7 +10,7 @@ const LaunchRequestHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
     handle(handlerInput) {
-        const speakOutput = 'Welcome, you can say Hello or Help. Which would you like to try?';
+        const speakOutput = 'はい，時刻をお知らせください';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -19,17 +19,30 @@ const LaunchRequestHandler = {
     }
 };
 
-const HelloWorldIntentHandler = {
+const AskKSPBusIntentHandler = {
     canHandle(handlerInput) {
-        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'HelloWorldIntent';
+        if (Alexa.getRequestType(handlerInput.requestEnvelope) !== 'IntentRequest') {
+            return false;
+        }
+        if (Alexa.getIntentName(handlerInput.requestEnvelope) !== 'AskKSPBusIntent') {
+            return false;
+        }
+
+        const attributesManager = handlerInput.attributesManager;
+        const sessionAttributes = attributesManager.getSessionAttributes() || {};
+        const time = sessionAttributes.hasOwnProperty('time') ? sessionAttributes.time : 0;
+        return time;
     },
     handle(handlerInput) {
-        const speakOutput = 'Hello World!';
+        const attributesManager = handlerInput.attributesManager;
+        const sessionAttributes = attributesManager.getSessionAttributes() || {};
+        const date = sessionAttributes.hasOwnProperty('date') ? sessionAttributes.date : 0;
+        const time = sessionAttributes.hasOwnProperty('time') ? sessionAttributes.time : 0;
+
+        const speakOutput = `日付は${date}で，時刻は${time}です`;
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
             .getResponse();
     }
 };
@@ -40,7 +53,7 @@ const HelpIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-        const speakOutput = 'You can say hello to me! How can I help?';
+        const speakOutput = '時刻をお知らせいただいたら，それに近いKSPバスの時間をお伝えします';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -56,7 +69,7 @@ const CancelAndStopIntentHandler = {
                 || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent');
     },
     handle(handlerInput) {
-        const speakOutput = 'Goodbye!';
+        const speakOutput = 'ありがとうございました';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -74,7 +87,7 @@ const FallbackIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.FallbackIntent';
     },
     handle(handlerInput) {
-        const speakOutput = 'Sorry, I don\'t know about that. Please try again.';
+        const speakOutput = 'すみません，理解できませんでした';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -144,7 +157,7 @@ const ErrorHandler = {
 exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
         LaunchRequestHandler,
-        HelloWorldIntentHandler,
+        AskKSPBusIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
         FallbackIntentHandler,
