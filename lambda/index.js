@@ -4,7 +4,8 @@
  * session persistence, api calls, and more.
  * */
 const Alexa = require('ask-sdk-core');
-const parse = require('date-fns/parse');
+const dateFns = require('date-fns');
+const dateFnsLocale = require('date-fns/locale');
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -26,11 +27,13 @@ const AskKSPBusIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskKSPBusIntent';
     },
     handle(handlerInput) {
-        const date = handlerInput.requestEnvelope.request.intent.slots.date.value;
-        const time = handlerInput.requestEnvelope.request.intent.slots.time.value;
+        const date = handlerInput.requestEnvelope.request.intent.slots.date.value
+            || dateFns.format(new Date(), "yyyy-MM-dd", { locale: dateFnsLocale.ja });
+        const time = handlerInput.requestEnvelope.request.intent.slots.time.value
+            || dateFns.format(new Date(), "HH:mm", { locale: dateFnsLocale.ja });
 
-        const target = parse(`${date} ${time}`, 'yyyy-MM-dd HH:mm', new Date(), { locale: ja });
-        // const target = "";
+        const target = dateFns.parse(`${date} ${time}`, 'yyyy-MM-dd HH:mm',
+            new Date(), { locale: dateFnsLocale.ja });
 
         const speakOutput = `${target}になります`;
         return handlerInput.responseBuilder
