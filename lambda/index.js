@@ -96,10 +96,10 @@ const AskNextKSPBusIntentHandler = {
 
 }
 
-const AskKSPBusIntentHandler = {
+const AskKSPBusWithTimeIntentHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskKSPBusIntent';
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskKSPBusWithTimeIntent';
     },
     handle(handlerInput) {
         const time = handlerInput.requestEnvelope.request.intent.slots.time.value;
@@ -237,7 +237,7 @@ exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
         LaunchRequestHandler,
         AskNextKSPBusIntentHandler,
-        AskKSPBusIntentHandler,
+        AskKSPBusWithTimeIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
         FallbackIntentHandler,
