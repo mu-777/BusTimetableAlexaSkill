@@ -45,6 +45,7 @@
           "name": "AskNextKSPBusIntent",
           "slots": [],
           "samples": [
+            "今すぐ",
             "今は",
             "今",
             "次のは",
@@ -60,5 +61,5 @@
       "types": []
     }
   },
-  "version": "31"
+  "version": "36"
 }
