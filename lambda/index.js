@@ -8,7 +8,7 @@ const dateFns = require('date-fns');
 const dateFnsLocaleJa = require('date-fns/locale/ja');
 const fs = require('fs');
 const csvParseSync = require('csv-parse/sync');
-const { getJstNow, dateToTimeJaStr, getDateFromDayOfWeek, dayOfWeekStrToNum } = require('./util')
+const { getJstNow, dateToTimeJaStr, dateToDateJaStr, getDateFromDayOfWeek, dayOfWeekStrToNum, dayOfWeekNumToStr } = require('./util')
 
 const TimetableType = Object.freeze({
     Weekday: 'Weekday',
@@ -86,8 +86,9 @@ const AskNextKSPBusIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AskNextKSPBusIntent';
     },
     handle(handlerInput) {
-        const candidates = GetCandidateTime(getJstNow());
-        const speakOutput = getKSPBusAnswer(candidates);
+        const inputDate = getJstNow();
+        const candidates = GetCandidateTime(inputDate);
+        const speakOutput = `現在${dateToDateJaStr(inputDate)}${dateToTimeJaStr(inputDate)}の、${getKSPBusAnswer(candidates)}`;
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
@@ -110,16 +111,20 @@ const AskKSPBusWithTimeIntentHandler = {
                 .reprompt(speakOutput)
                 .getResponse();
         }
-        const dayofweek = handlerInput.requestEnvelope.request.intent.slots.dayofweek.value;
-        const date = dayofweek
-            ? dateFns.format(getDateFromDayOfWeek(dayOfWeekStrToNum(dayofweek)), "yyyy-MM-dd", { locale: dateFnsLocaleJa })
+        const dayofweekStr = handlerInput.requestEnvelope.request.intent.slots.dayofweek.value;
+        const dateStr = dayofweekStr
+            ? dateFns.format(getDateFromDayOfWeek(dayOfWeekStrToNum(dayofweekStr)), "yyyy-MM-dd", { locale: dateFnsLocaleJa })
             : handlerInput.requestEnvelope.request.intent.slots.date.value || dateFns.format(getJstNow(), "yyyy-MM-dd", { locale: dateFnsLocaleJa });
 
-        const inputDate = dateFns.parse(`${date} ${time}`, 'yyyy-MM-dd HH:mm',
+        const inputDate = dateFns.parse(`${dateStr} ${time}`, 'yyyy-MM-dd HH:mm',
             new Date(), { locale: dateFnsLocaleJa });
 
         const candidates = GetCandidateTime(inputDate);
-        const speakOutput = getKSPBusAnswer(candidates);
+        const prespeakOutput = (dayofweekStr
+            ? `${dayOfWeekNumToStr(dayOfWeekStrToNum(dayofweekStr))}曜`
+            : `${dateToDateJaStr(inputDate)}`)
+            + `${dateToTimeJaStr(inputDate)}`
+        const speakOutput = `${prespeakOutput}の、${getKSPBusAnswer(candidates)}`;
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
