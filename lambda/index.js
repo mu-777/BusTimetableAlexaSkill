@@ -111,7 +111,8 @@ const AskKSPBusWithTimeIntentHandler = {
                 .getResponse();
         }
         const dayofweek = handlerInput.requestEnvelope.request.intent.slots.dayofweek.value;
-        const date = dayofweek ? getDateFromDayOfWeek(dayOfWeekStrToNum(dayofweek))
+        const date = dayofweek
+            ? dateFns.format(getDateFromDayOfWeek(dayOfWeekStrToNum(dayofweek)), "yyyy-MM-dd", { locale: dateFnsLocaleJa })
             : handlerInput.requestEnvelope.request.intent.slots.date.value || dateFns.format(getJstNow(), "yyyy-MM-dd", { locale: dateFnsLocaleJa });
 
         const inputDate = dateFns.parse(`${date} ${time}`, 'yyyy-MM-dd HH:mm',
