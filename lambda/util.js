@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
-const { getDay } = require('date-fns');
+const dateFns = require('date-fns');
+const dateFnsLocaleJa = require('date-fns/locale/ja');
 
 const s3SigV4Client = new AWS.S3({
     signatureVersion: 'v4',

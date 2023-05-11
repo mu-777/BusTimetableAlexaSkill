@@ -22,7 +22,7 @@ function LoadTimetableSync(timetableType) {
             : "weekday.csv"
     return csvParseSync.parse(fs.readFileSync(filePath), {
         relax_column_count: true
-    }).reduce((acc, [key, ...values]) => ({ ...acc, [parseInt(key)]: values.map(v => parseInt(v, 10)) }), {});
+    }).reduce((acc, [key, ...values]) => ({ ...acc, [key]: values.map(v => parseInt(v, 10)) }), {});
 }
 
 // This returns [the 1st nearest, the 2nd nearest]
@@ -41,11 +41,11 @@ function GetCandidateTime(date) {
 
     const getNearestTime = (targetDate) => {
         const [hour, minute] = [targetDate.getHours(), targetDate.getMinutes()];
-        const minHourInTimetable = Math.min(Object.keys(timetable));
+        const minHourInTimetable = Math.min(...Object.keys(timetable));
         if (hour < minHourInTimetable) {
             return getDateFromTime(minHourInTimetable, timetable[minHourInTimetable][0]);
         }
-        const maxHourInTimetable = Math.max(Object.keys(timetable));
+        const maxHourInTimetable = Math.max(...Object.keys(timetable));
         if (hour > maxHourInTimetable) {
             return null;
         }
@@ -243,7 +243,6 @@ exports.handler = Alexa.SkillBuilders.custom()
         FallbackIntentHandler,
         SessionEndedRequestHandler,
         IntentReflectorHandler)
-    .addErrorHandlers(
-        ErrorHandler)
+    .addErrorHandlers(ErrorHandler)
     .withCustomUserAgent('sample/hello-world/v1.2')
     .lambda();
